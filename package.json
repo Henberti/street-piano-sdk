@@ -1,6 +1,6 @@
 {
   "name": "@chenberti/street-piano-sdk",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "This SDK wraps mqtt.js and EMQX features to provide a robust, production-ready MQTT consumer for backend services.",
   "keywords": [
     "mqtt",

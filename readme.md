@@ -104,24 +104,90 @@ Callback definition for incoming messages:
 
 ## 🎵 MIDI Payload Explanation
 
-All messages received through this SDK originate from the Street Piano system and contain** ** **MIDI events** .
+All messages received through this SDK originate from the Street Piano system and contain **MIDI events**.
 
-The payload comes from the** ** **Mido Python library** , which runs on the piano hardware.
+### ✅ Topic format
 
-Typical events include:
+Incoming messages are published to:
 
-* Note pressed
-* Note released
-* Control change (pedals, etc.)
-* Program change
-* Velocity information
+```
+piano/play/<piano_id>
+```
 
-You can simplify by logging the string:
+Example topic:
 
-<pre class="overflow-visible!" data-start="2945" data-end="2973"><div class="contain-inline-size rounded-2xl relative bg-token-sidebar-surface-primary"><div class="sticky top-9"><div class="absolute end-0 bottom-0 flex h-9 items-center pe-2"><div class="bg-token-bg-elevated-secondary text-token-text-secondary flex items-center gap-4 rounded-sm px-2 font-sans text-xs"></div></div></div><div class="overflow-y-auto p-4" dir="ltr"><code class="whitespace-pre! language-ts"><span><span>payload.</span><span>toString</span><span>()
-</span></span></code></div></div></pre>
+```
+piano/play/68ce6762f775e17b114e899d
+```
 
-Or parse into a structured MIDI object if needed.
+### ✅ How to parse the message
+
+Your callback receives the MQTT `payload` as a **Buffer**.  
+To extract the structured data, you **must** parse it like this:
+
+```ts
+const { payload, timestamp, topic } = JSON.parse(payload.toString());
+```
+
+### Example parsed payload
+
+```json
+{
+  "payload": {
+    "type": "note_on",
+    "time": 0,
+    "note": 91,
+    "velocity": 34,
+    "channel": 0
+  },
+  "timestamp": 1763795201.983794,
+  "topic": "piano/play/68ce6762f775e17b114e899d"
+}
+```
+
+---
+
+### Field explanations
+
+#### `payload` (MIDI message)
+
+This object is a standard MIDI event produced by the piano.
+
+- **`type`**
+  - `note_on`: a key was pressed.
+  - `note_off`: a key was released.
+
+- **`note`**
+  MIDI note number (`0–127`).  
+  Each value maps to a musical pitch on the keyboard.  
+  Example: `91` is a high note.
+
+- **`velocity`**
+  How strongly the key was pressed (`0–127`).  
+  Higher velocity = louder / stronger press.  
+  **Note:** a `note_on` with velocity `0` is often treated as `note_off`.
+
+- **`channel`**
+  MIDI channel (`0–15`).  
+  Most pianos use channel `0`, but setups with multiple instruments may use others.
+
+- **`time`**
+  Delta time (seconds) relative to the previous MIDI event.  
+  In real-time streaming it is often `0`.
+
+#### `timestamp`
+
+Unix timestamp (seconds, including fractions) indicating **when the event was produced/sent** by the piano system.  
+Useful for ordering events, measuring latency, or syncing visuals.
+
+#### `topic`
+
+The MQTT topic the message arrived on:
+
+```
+piano/play/<piano_id>
+```
+
 
 ---
 
@@ -157,7 +223,7 @@ If a fatal problem occurs, the SDK** ****stops reconnecting** and informs you th
 
 For credentials, piano IDs, or integration help:
 
-📧** **`support@streetpiano.io`
+📧** **henb@software-berti-tech.com
 (Or your internal Street Piano engineering contact)
 
 ---
